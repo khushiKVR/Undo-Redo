@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Undo/Redo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      width: 500px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      background: #111;
+      color: #0f0;
+      border: 1px solid #444;
+      border-radius: 5px;
+      padding: 10px;
+      margin-bottom: 10px;
+      resize: none;
+    }
+    button {
+      margin: 5px 3px;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .apply { background: #0af; color: #fff; }
+    .undo { background: #f90; color: #000; }
+    .redo { background: #0f0; color: #000; }
+    .reset { background: #555; color: #fff; }
+    .stacks {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .stack {
+      flex: 1;
+      background: #333;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    .stack h3 { margin: 0 0 5px; font-size: 14px; color: #ccc; }
+    .item { border-bottom: 1px solid #444; padding: 2px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Word Undo/Redo (2 Stacks)</h2>
+
+    <textarea id="editor" placeholder="Type a line here..."></textarea><br>
+
+    <button class="apply" onclick="performAction()">Apply</button>
+    <button class="undo" onclick="undo()">Undo (Ctrl+Z)</button>
+    <button class="redo" onclick="redo()">Redo (Ctrl+Y)</button>
+    <button class="reset" onclick="resetEditor()">Reset</button>
+
+    <div class="stacks">
+      <div class="stack">
+        <h3>Undo Stack (Words)</h3>
+        <div id="undoStack"></div>
+      </div>
+      <div class="stack">
+        <h3>Redo Stack (Words)</h3>
+        <div id="redoStack"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let words = [];       // current words in editor
+    let undoStack = [];   // store removed words
+    let redoStack = [];   // store undone words
+
+    function updateDisplay() {
+      document.getElementById("editor").value = words.join(" ");
+      document.getElementById("undoStack").innerHTML =
+        undoStack.map(w => `<div class='item'>${w}</div>`).join("");
+      document.getElementById("redoStack").innerHTML =
+        redoStack.map(w => `<div class='item'>${w}</div>`).join("");
+    }
+
+    function performAction() {
+      let input = document.getElementById("editor").value.trim();
+      if (!input) return;
+
+      words = input.split(/\s+/); // break into words
+      redoStack = [];             // clear redo on new action
+      updateDisplay();
+    }
+
+    function undo() {
+      if (words.length === 0) return;
+      let word = words.pop();     // remove last word
+      undoStack.push(word);       // push to undo stack
+      redoStack.push(word);       // keep it for redo
+      updateDisplay();
+    }
+
+    function redo() {
+      if (redoStack.length === 0) return;
+      let word = redoStack.pop(); // take back word
+      words.push(word);
+      updateDisplay();
+    }
+
+    function resetEditor() {
+      words = [];
+      undoStack = [];
+      redoStack = [];
+      updateDisplay();
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener("keydown", function(e) {
+      if (e.ctrlKey && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        undo();
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        redo();
+      }
+    });
+
+    updateDisplay();
+  </script>
+</body>
+</html>
